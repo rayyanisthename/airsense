@@ -1,0 +1,10 @@
+#map .leaflet-control-zoom a {
+  border-radius: 8px;
+}
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+#map { min-height: 360px; height: 460px; border-radius: 12px; }

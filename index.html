@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AirSense – Real-Time Air Quality</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body
+    class="bg-gray-50 text-gray-900"
+    style="font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;"
+  >
+    <header class="w-full bg-white shadow-sm sticky top-0 z-30">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <h1 class="text-2xl md:text-3xl font-extrabold">🌍 AirSense</h1>
+        <div class="flex gap-2 items-center">
+          <input
+            id="cityInput"
+            class="border rounded-lg px-3 py-2 text-sm"
+            placeholder="Enter city (e.g., Lucknow)"
+          />
+          <button id="refreshBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
+            Refresh
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section class="md:col-span-2">
+        <div id="map" class="w-full h-96 rounded-xl shadow"></div>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold mb-1">Air Quality</h3>
+            <div id="aqiBadge" class="text-3xl font-extrabold">--</div>
+            <div id="statusText" class="text-sm text-gray-600">Awaiting data…</div>
+          </div>
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold mb-1">Health Advice</h3>
+            <p id="adviceText" class="text-sm">—</p>
+          </div>
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold mb-1">Station / Time</h3>
+            <p id="stationText" class="text-sm">—</p>
+            <p id="timeText" class="text-xs text-gray-500">—</p>
+          </div>
+        </div>
+      </section>
+
+      <aside class="space-y-4">
+        <div class="bg-white rounded-xl p-4 shadow">
+          <h3 class="font-semibold mb-2">Next 12h Forecast</h3>
+          <canvas id="forecastChart" height="220"></canvas>
+          <p class="text-xs text-gray-500 mt-2">
+            Simple rule-based estimate using time-of-day + zone weighting (traffic peaks around 9am & 5pm).
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow">
+          <h3 class="font-semibold mb-2">Layers</h3>
+          <label class="flex items-center gap-2 text-sm">
+            <input id="heatToggle" type="checkbox" class="h-4 w-4" />
+            <span>Show heatmap (heat zones)</span>
+          </label>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="max-w-6xl mx-auto px-4 pb-8 text-xs text-gray-500">Made by Rayyan.</footer>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
