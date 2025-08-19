@@ -21,6 +21,7 @@
     class="bg-gray-50 text-gray-900"
     style="font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;"
   >
+    <!-- Sticky header -->
     <header class="w-full bg-white shadow-sm sticky top-0 z-30">
       <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
         <h1 class="text-2xl md:text-3xl font-extrabold">🌍 AirSense</h1>
@@ -30,9 +31,21 @@
             class="border rounded-lg px-3 py-2 text-sm"
             placeholder="Enter city (e.g., Lucknow)"
           />
-          <button id="refreshBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
-            Refresh
-          </button>
+          <button id="refreshBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">Refresh</button>
+<button id="locateBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700">📍 Use My Location</button>
+        </div>
+      </div>
+      <!-- Inline alert banner (shown during high AQI) -->
+      <div id="alertBanner" class="hidden">
+        <div class="max-w-6xl mx-auto px-4 py-2">
+          <div class="flex items-start md:items-center gap-2 text-sm">
+            <div id="alertBannerBadge" class="badge">ALERT</div>
+            <div class="flex-1">
+              <div id="alertBannerText" class="font-semibold"></div>
+              <div id="alertBannerSub" class="text-xs opacity-90"></div>
+            </div>
+            <button id="alertBannerDismiss" class="text-xs underline">Dismiss</button>
+          </div>
         </div>
       </div>
     </header>
@@ -41,6 +54,11 @@
       <section class="md:col-span-2">
         <div id="map" class="w-full h-96 rounded-xl shadow"></div>
         <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="bg-white rounded-xl p-4 shadow mt-4">
+  <h3 class="font-semibold mb-2">Major Air Pollutants</h3>
+  <div id="pollutantsList" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm"></div>
+</div>
+
           <div class="bg-white rounded-xl p-4 shadow">
             <h3 class="font-semibold mb-1">Air Quality</h3>
             <div id="aqiBadge" class="text-3xl font-extrabold">--</div>
@@ -51,8 +69,7 @@
             <p id="adviceText" class="text-sm">—</p>
           </div>
           <div class="bg-white rounded-xl p-4 shadow">
-            <h3 class="font-semibold mb-1">Station / Time</h3>
-            <p id="stationText" class="text-sm">—</p>
+            <h3 class="font-semibold mb-1">Last Update</h3>
             <p id="timeText" class="text-xs text-gray-500">—</p>
           </div>
         </div>
@@ -74,10 +91,34 @@
             <span>Show heatmap (heat zones)</span>
           </label>
         </div>
+
+        <div class="bg-white rounded-xl p-4 shadow">
+          <h3 class="font-semibold mb-2">Health Alerts</h3>
+          <div class="space-y-2 text-sm">
+            <label class="flex items-center gap-2">
+              <input id="alertsToggle" type="checkbox" class="h-4 w-4" />
+              <span>Enable health alerts</span>
+            </label>
+            <label class="flex items-center gap-2">
+              <input id="pushToggle" type="checkbox" class="h-4 w-4" />
+              <span>Use browser notifications (if permitted)</span>
+            </label>
+            <button id="testAlertBtn" class="mt-2 px-3 py-1.5 text-xs rounded-md bg-gray-800 text-white">
+              Test alert
+            </button>
+            <p class="text-xs text-gray-500">
+              Alerts trigger when AQI is <span class="font-semibold">Unhealthy (≥150)</span> or worse,
+              with cooldowns to avoid spam. Push notifications require permission.
+            </p>
+          </div>
+        </div>
       </aside>
     </main>
 
     <footer class="max-w-6xl mx-auto px-4 pb-8 text-xs text-gray-500">Made by Rayyan.</footer>
+
+    <!-- Toast container (bottom-right) -->
+    <div id="toastContainer"></div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
