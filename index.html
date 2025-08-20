@@ -216,7 +216,7 @@
           id="pollutantsDetailGrid"
           class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          <!-- Placeholder content for demonstration without full JS logic -->
+          <!-- Placeholder content (will be replaced by JS once data loads) -->
           <div class="pollutant-card">
             <h3 class="font-semibold mb-2">PM2.5 🌫️</h3>
             <div class="pollutant-value" style="color: #9ca3af">--</div>
@@ -279,6 +279,146 @@
           </button>
         </div>
       </section>
+
+      <!-- Community Page -->
+      <section id="community-page" class="hidden md:col-span-3">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold">Community 🌿</h2>
+          <div id="communityUserChip" class="text-sm"></div>
+        </div>
+
+        <!-- Auth Cards (shown if not logged in) -->
+        <div id="authWrapper" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white rounded-xl shadow p-4">
+            <h3 class="text-xl font-bold mb-4">Register</h3>
+            <div class="space-y-3">
+              <input
+                type="text"
+                id="regName"
+                placeholder="Your name"
+                class="w-full border rounded-lg px-3 py-2 text-sm"
+              />
+              <input
+                type="email"
+                id="regEmail"
+                placeholder="Your email"
+                class="w-full border rounded-lg px-3 py-2 text-sm"
+              />
+              <input
+                type="password"
+                id="regPass"
+                placeholder="Choose password"
+                class="w-full border rounded-lg px-3 py-2 text-sm"
+              />
+              <button
+                id="regBtn"
+                class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Create Account
+              </button>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl shadow p-4">
+            <h3 class="text-xl font-bold mb-4">Login</h3>
+            <div class="space-y-3">
+              <input
+                type="email"
+                id="loginEmail"
+                placeholder="Your email"
+                class="w-full border rounded-lg px-3 py-2 text-sm"
+              />
+              <input
+                type="password"
+                id="loginPass"
+                placeholder="Your password"
+                class="w-full border rounded-lg px-3 py-2 text-sm"
+              />
+              <button
+                id="loginBtn"
+                class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Login
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logged-in UI -->
+        <div
+          id="communityApp"
+          class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6"
+        >
+          <!-- Left: Create Post -->
+          <div class="lg:col-span-1 space-y-4">
+            <div class="bg-white rounded-xl shadow p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-semibold text-lg">Share your initiative</h3>
+                <button
+                  id="logoutBtn"
+                  class="text-xs px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200"
+                >
+                  Logout
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mb-3">
+                Upload a photo (planting trees, cycling, carpooling, etc.) with
+                a short caption. Each approved post instantly gives you
+                <span class="font-semibold">+5 points</span> 🌟.
+              </p>
+              <div class="space-y-2">
+                <input
+                  type="file"
+                  id="postImage"
+                  accept="image/*"
+                  class="w-full mb-2"
+                />
+                <textarea
+                  id="postText"
+                  class="w-full border rounded-lg px-3 py-2 text-sm mb-2"
+                  placeholder="Write a caption..."
+                  rows="3"
+                ></textarea>
+                <button
+                  id="submitPostBtn"
+                  class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Share Post
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-4">
+              <h3 class="font-semibold mb-2">Leaderboard 🏆</h3>
+              <ol id="leaderboardList" class="text-sm space-y-1"></ol>
+            </div>
+          </div>
+
+          <!-- Right: Feed -->
+          <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-semibold">Community Feed</h3>
+                <button
+                  id="refreshFeedBtn"
+                  class="text-xs px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200"
+                >
+                  Refresh
+                </button>
+              </div>
+              <div
+                id="feedGrid"
+                class="grid grid-cols-1 md:grid-cols-2 gap-4"
+              ></div>
+              <div
+                id="emptyFeed"
+                class="text-sm text-gray-500 text-center py-6 hidden"
+              >
+                No posts yet. Be the first to share!
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="max-w-6xl mx-auto px-4 pb-8 text-xs text-gray-500">
@@ -288,9 +428,43 @@
     <!-- Toast container (bottom-right) -->
     <div id="toastContainer"></div>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+    <!-- Load Firebase SDKs first -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
+
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDHmbWAXGaNBpSBvJgKVCWLT_w76mB-ues",
+        authDomain: "airsensetf09.firebaseapp.com",
+        projectId: "airsensetf09",
+        storageBucket: "airsensetf09.firebasestorage.app",
+        messagingSenderId: "1044537988295",
+        appId: "1:1044537988295:web:416db81f37758cce7b9ae2",
+        measurementId: "G-FCBGNSNNFS",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Make Firebase instances available globally
+      window.firebaseApp = app;
+      window.firebaseAuth = auth;
+      window.firebaseDB = db;
+      window.firebaseAnalytics = getAnalytics(app);
+    </script>
+
+    <!-- Add Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
+
+    <!-- Add Leaflet.js -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Then load your script -->
+    <script src="script.js" type="module"></script>
   </body>
 </html>
