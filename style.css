@@ -1,127 +1,35 @@
-#map .leaflet-control-zoom a {
-  border-radius: 8px;
-}
-.badge {
-  display: inline-block;
-  padding: 6px 10px;
-  border-radius: 9999px;
-  font-weight: 700;
-}
-#map {
-  min-height: 360px;
-  height: 460px;
-  border-radius: 12px;
-  position: relative;
-  z-index: 1;
-}
+
+#map .leaflet-control-zoom a { border-radius: 8px; }
+.badge { display: inline-block; padding: 6px 10px; border-radius: 9999px; font-weight: 700; }
+#map { min-height: 360px; height: 460px; border-radius: 12px; position: relative; z-index: 1; }
 
 /* Alert banner (below header) */
-#alertBanner {
-  background: #fee2e2; /* light red */
-  border-top: 1px solid #fecaca;
-  border-bottom: 1px solid #fecaca;
-}
-#alertBanner .badge {
-  background: #ef4444;
-  color: white;
-}
+#alertBanner { background: #fee2e2; border-top: 1px solid #fecaca; border-bottom: 1px solid #fecaca; }
+#alertBanner .badge { background: #ef4444; color: white; }
 
 /* Toast container bottom-right */
-#toastContainer {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 1000;
-}
-.toast {
-  min-width: 260px;
-  max-width: 360px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  font-size: 14px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-.toast .title {
-  font-weight: 700;
-  margin-bottom: 2px;
-}
-.toast .time {
-  font-size: 11px;
-  opacity: 0.8;
-  margin-top: 4px;
-}
-.toast--warn {
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-}
-.toast--bad {
-  background: #fee2e2;
-  border: 1px solid #fecaca;
-}
-.toast--vbad {
-  background: #ede9fe;
-  border: 1px solid #c4b5fd;
-}
-.toast--haz {
-  background: #111827;
-  border: 1px solid #4b5563;
-  color: #f9fafb;
-}
+#toastContainer { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+.toast { min-width: 260px; max-width: 360px; padding: 12px 14px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); font-size: 14px; display: flex; align-items: flex-start; gap: 10px; background: #fff7ed; border: 1px solid #fed7aa; }
+.toast .title { font-weight: 700; margin-bottom: 2px; }
+.toast .time { font-size: 11px; opacity: 0.8; margin-top: 4px; }
+.toast--warn { background: #fff7ed; border: 1px solid #fed7aa; }
+.toast--bad { background: #fee2e2; border: 1px solid #fecaca; }
+.toast--vbad { background: #ede9fe; border: 1px solid #c4b5fd; }
+.toast--haz { background: #111827; border: 1px solid #4b5563; color: #f9fafb; }
 
 /* Side Menu Styles */
-#sideMenu {
-  -webkit-transform: translateX(-100%);
-  transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out;
-}
-
-#sideMenu.open {
-  -webkit-transform: translateX(0);
-  transform: translateX(0);
-}
-
-#overlay {
-  background-color: rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease-in-out;
-}
-
-#overlay.open {
-  opacity: 1;
-  pointer-events: auto;
-}
+#sideMenu { -webkit-transform: translateX(-100%); transform: translateX(-100%); transition: transform 0.3s ease-in-out; }
+#sideMenu.open { -webkit-transform: translateX(0); transform: translateX(0); }
+#overlay { background-color: rgba(0, 0, 0, 0.5); opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; }
+#overlay.open { opacity: 1; pointer-events: auto; }
 
 /* Pollutant Card Styling */
-.pollutant-card {
-  background-color: white;
-  border-radius: 0.75rem; /* rounded-xl */
-  padding: 1rem; /* p-4 */
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
+.pollutant-card { background-color: white; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.pollutant-card .pollutant-value { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.25rem; }
+.pollutant-card .pollutant-label { font-size: 0.875rem; color: #4b5563; }
 
-.pollutant-card .pollutant-value {
-  font-size: 2.5rem; /* text-3xl, adjusted for larger impact */
-  font-weight: 800; /* font-extrabold */
-  margin-bottom: 0.25rem;
-}
+/* Styles for temperature badge */
+#tempBadge { color: #3b82f6; }
 
-.pollutant-card .pollutant-label {
-  font-size: 0.875rem; /* text-sm */
-  color: #4b5563; /* text-gray-600 */
-}
-
-/* Styles for temperature badge, similar to AQI */
-#tempBadge {
-  color: #3b82f6; /* Example color for temperature, blue */
-}
+/* Minor helper for card images to avoid layout shift */
+#feedGrid img { aspect-ratio: 4/3; }
