@@ -15,24 +15,49 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
       rel="stylesheet"
     />
+    <!-- Font Awesome for hamburger icon -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body
     class="bg-gray-50 text-gray-900"
-    style="font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;"
+    style="
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    "
   >
     <!-- Sticky header -->
     <header class="w-full bg-white shadow-sm sticky top-0 z-30">
-      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <h1 class="text-2xl md:text-3xl font-extrabold">🌍 AirSense</h1>
+      <div
+        class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-4">
+          <!-- Hamburger button - now visible on all screen sizes -->
+          <button id="hamburgerBtn" class="text-gray-600 text-2xl">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h1 class="text-2xl md:text-3xl font-extrabold">🌍 AirSense</h1>
+        </div>
         <div class="flex gap-2 items-center">
           <input
             id="cityInput"
             class="border rounded-lg px-3 py-2 text-sm"
             placeholder="Enter city (e.g., Lucknow)"
           />
-          <button id="refreshBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">Refresh</button>
-<button id="locateBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700">📍 Use My Location</button>
+          <button
+            id="refreshBtn"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
+          >
+            Refresh
+          </button>
+          <button
+            id="locateBtn"
+            class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700"
+          >
+            📍 Use My Location
+          </button>
         </div>
       </div>
       <!-- Inline alert banner (shown during high AQI) -->
@@ -44,78 +69,221 @@
               <div id="alertBannerText" class="font-semibold"></div>
               <div id="alertBannerSub" class="text-xs opacity-90"></div>
             </div>
-            <button id="alertBannerDismiss" class="text-xs underline">Dismiss</button>
+            <button id="alertBannerDismiss" class="text-xs underline">
+              Dismiss
+            </button>
           </div>
         </div>
       </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-      <section class="md:col-span-2">
-        <div id="map" class="w-full h-96 rounded-xl shadow"></div>
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-<div class="bg-white rounded-xl p-4 shadow mt-4">
-  <h3 class="font-semibold mb-2">Major Air Pollutants</h3>
-  <div id="pollutantsList" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm"></div>
-</div>
+    <!-- Side Menu / Hamburger Menu -->
+    <nav
+      id="sideMenu"
+      class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-40"
+    >
+      <div class="p-4 flex justify-between items-center border-b">
+        <h2 class="text-xl font-bold">AirSense Menu</h2>
+        <button id="closeMenuBtn" class="text-gray-600 text-2xl">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <ul class="py-4">
+        <li>
+          <a
+            href="#"
+            class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+            data-page="main-dashboard"
+            >Dashboard</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+            data-page="pollutants-page"
+            >Pollutants Detail</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+            data-page="ai-chat-page"
+            >AI Chat</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+            data-page="community-page"
+            >Community</a
+          >
+        </li>
+      </ul>
+    </nav>
+    <div
+      id="overlay"
+      class="fixed inset-0 bg-black opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out z-30"
+    ></div>
+
+    <main
+      class="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-3 gap-6"
+    >
+      <!-- Main Dashboard Page -->
+      <section
+        id="main-dashboard"
+        class="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6"
+      >
+        <div class="md:col-span-2">
+          <div id="map" class="w-full h-96 rounded-xl shadow"></div>
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold mb-1">Air Quality</h3>
+              <div id="aqiBadge" class="text-3xl font-extrabold">--</div>
+              <div id="statusText" class="text-sm text-gray-600">
+                Awaiting data…
+              </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold mb-1">Temperature</h3>
+              <div id="tempBadge" class="text-3xl font-extrabold">--</div>
+              <div id="tempStatusText" class="text-sm text-gray-600">
+                Awaiting data…
+              </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold mb-1">Health Advice</h3>
+              <p id="adviceText" class="text-sm">—</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold mb-1">Last Update</h3>
+              <p id="timeText" class="text-xs text-gray-500">—</p>
+            </div>
+          </div>
+        </div>
+        <aside class="space-y-4">
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold mb-2">Next 12h AQI Forecast</h3>
+            <canvas id="forecastChart" height="220"></canvas>
+            <p class="text-xs text-gray-500 mt-2">
+              Simple rule-based estimate using time-of-day + zone weighting
+              (traffic peaks around 9am & 5pm).
+            </p>
+          </div>
 
           <div class="bg-white rounded-xl p-4 shadow">
-            <h3 class="font-semibold mb-1">Air Quality</h3>
-            <div id="aqiBadge" class="text-3xl font-extrabold">--</div>
-            <div id="statusText" class="text-sm text-gray-600">Awaiting data…</div>
+            <h3 class="font-semibold mb-2">Layers</h3>
+            <label class="flex items-center gap-2 text-sm">
+              <input id="zoneToggle" type="checkbox" class="h-4 w-4" />
+              <span>Show Zone Shading</span>
+            </label>
           </div>
+
           <div class="bg-white rounded-xl p-4 shadow">
-            <h3 class="font-semibold mb-1">Health Advice</h3>
-            <p id="adviceText" class="text-sm">—</p>
+            <h3 class="font-semibold mb-2">Health Alerts</h3>
+            <div class="space-y-2 text-sm">
+              <label class="flex items-center gap-2">
+                <input id="alertsToggle" type="checkbox" class="h-4 w-4" />
+                <span>Enable health alerts</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input id="pushToggle" type="checkbox" class="h-4 w-4" />
+                <span>Use browser notifications (if permitted)</span>
+              </label>
+              <button
+                id="testAlertBtn"
+                class="mt-2 px-3 py-1.5 text-xs rounded-md bg-gray-800 text-white"
+              >
+                Test alert
+              </button>
+              <p class="text-xs text-gray-500">
+                Alerts trigger when AQI is
+                <span class="font-semibold">Unhealthy (≥150)</span> or worse,
+                with cooldowns to avoid spam. Push notifications require
+                permission.
+              </p>
+            </div>
           </div>
-          <div class="bg-white rounded-xl p-4 shadow">
-            <h3 class="font-semibold mb-1">Last Update</h3>
-            <p id="timeText" class="text-xs text-gray-500">—</p>
+        </aside>
+      </section>
+
+      <!-- Pollutants Detail Page -->
+      <section id="pollutants-page" class="hidden md:col-span-3">
+        <h2 class="text-2xl font-bold mb-4">Major Air Pollutants Details</h2>
+        <div
+          id="pollutantsDetailGrid"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
+          <!-- Placeholder content for demonstration without full JS logic -->
+          <div class="pollutant-card">
+            <h3 class="font-semibold mb-2">PM2.5 🌫️</h3>
+            <div class="pollutant-value" style="color: #9ca3af">--</div>
+            <div class="pollutant-label">µg/m³ - No Data</div>
+          </div>
+          <div class="pollutant-card">
+            <h3 class="font-semibold mb-2">PM10 🌫️</h3>
+            <div class="pollutant-value" style="color: #9ca3af">--</div>
+            <div class="pollutant-label">µg/m³ - No Data</div>
+          </div>
+          <div class="pollutant-card">
+            <h3 class="font-semibold mb-2">CO 🔥</h3>
+            <div class="pollutant-value" style="color: #9ca3af">--</div>
+            <div class="pollutant-label">ppm - No Data</div>
+          </div>
+          <div class="pollutant-card">
+            <h3 class="font-semibold mb-2">SO₂ 🌋</h3>
+            <div class="pollutant-value" style="color: #9ca3af">--</div>
+            <div class="pollutant-label">ppb - No Data</div>
+          </div>
+          <div class="pollutant-card">
+            <h3 class="font-semibold mb-2">NO₂ 🚗</h3>
+            <div class="pollutant-value" style="color: #9ca3af">--</div>
+            <div class="pollutant-label">ppb - No Data</div>
+          </div>
+          <div class="pollutant-card">
+            <h3 class="font-semibold mb-2">O₃ ☀️</h3>
+            <div class="pollutant-value" style="color: #9ca3af">--</div>
+            <div class="pollutant-label">ppb - No Data</div>
           </div>
         </div>
       </section>
 
-      <aside class="space-y-4">
-        <div class="bg-white rounded-xl p-4 shadow">
-          <h3 class="font-semibold mb-2">Next 12h Forecast</h3>
-          <canvas id="forecastChart" height="220"></canvas>
-          <p class="text-xs text-gray-500 mt-2">
-            Simple rule-based estimate using time-of-day + zone weighting (traffic peaks around 9am & 5pm).
-          </p>
-        </div>
-
-        <div class="bg-white rounded-xl p-4 shadow">
-          <h3 class="font-semibold mb-2">Layers</h3>
-          <label class="flex items-center gap-2 text-sm">
-            <input id="heatToggle" type="checkbox" class="h-4 w-4" />
-            <span>Show heatmap (heat zones)</span>
-          </label>
-        </div>
-
-        <div class="bg-white rounded-xl p-4 shadow">
-          <h3 class="font-semibold mb-2">Health Alerts</h3>
-          <div class="space-y-2 text-sm">
-            <label class="flex items-center gap-2">
-              <input id="alertsToggle" type="checkbox" class="h-4 w-4" />
-              <span>Enable health alerts</span>
-            </label>
-            <label class="flex items-center gap-2">
-              <input id="pushToggle" type="checkbox" class="h-4 w-4" />
-              <span>Use browser notifications (if permitted)</span>
-            </label>
-            <button id="testAlertBtn" class="mt-2 px-3 py-1.5 text-xs rounded-md bg-gray-800 text-white">
-              Test alert
-            </button>
-            <p class="text-xs text-gray-500">
-              Alerts trigger when AQI is <span class="font-semibold">Unhealthy (≥150)</span> or worse,
-              with cooldowns to avoid spam. Push notifications require permission.
-            </p>
+      <!-- AI Chat Page -->
+      <section
+        id="ai-chat-page"
+        class="hidden md:col-span-3 flex flex-col h-[70vh] bg-white rounded-xl shadow p-4"
+      >
+        <h2 class="text-2xl font-bold mb-4">AI Chat Assistant</h2>
+        <div
+          id="chatMessages"
+          class="flex-1 overflow-y-auto border rounded-lg p-4 mb-4 bg-gray-50"
+        >
+          <div class="text-gray-500 text-center">
+            Start a conversation to get air quality insights!
           </div>
         </div>
-      </aside>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            id="chatInput"
+            class="flex-1 border rounded-lg px-3 py-2 text-sm"
+            placeholder="Ask me about air quality..."
+          />
+          <button
+            id="sendMessageBtn"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
+          >
+            Send
+          </button>
+        </div>
+      </section>
     </main>
 
-    <footer class="max-w-6xl mx-auto px-4 pb-8 text-xs text-gray-500">Made by Rayyan.</footer>
+    <footer class="max-w-6xl mx-auto px-4 pb-8 text-xs text-gray-500">
+      Made by team TF09.
+    </footer>
 
     <!-- Toast container (bottom-right) -->
     <div id="toastContainer"></div>
