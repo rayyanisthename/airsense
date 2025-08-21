@@ -38,12 +38,14 @@
             <i class="fas fa-bars"></i>
           </button>
           <h1
-            class="text-2xl md:text-3xl font-extrabold uppercase animated-gradient-text"
+            class="text-xl sm:text-2xl md:text-3xl font-extrabold uppercase animated-gradient-text"
           >
             AIRSENSE - Real Time Air Quality
           </h1>
         </div>
-        <div class="flex gap-2 items-center">
+        <div
+          class="flex flex-col sm:flex-row gap-2 items-center w-full md:w-auto mt-4 md:mt-0"
+        >
           <div class="relative InputContainer">
             <input
               id="cityInput"
@@ -56,7 +58,7 @@
               class="hidden absolute top-full bg-white border rounded-lg mt-1 w-full z-50 shadow-lg"
             ></div>
           </div>
-          <button id="locateBtn" class="btn">
+          <button id="locateBtn" class="btn w-full sm:w-auto">
             <strong>LOCATE ME</strong>
             <div id="container-stars">
               <div id="stars"></div>
