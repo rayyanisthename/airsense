@@ -1593,7 +1593,9 @@ pushToggle?.addEventListener("change", async () => {
     if ("Notification" in window) {
       try {
         await Notification.requestPermission();
-      } catch {}
+      } catch (err) {
+        console.error("Error requesting notification permission:", err);
+      }
       if (Notification.permission !== "granted") {
         showToast({
           title: "⚠ Cannot enable push alerts",
