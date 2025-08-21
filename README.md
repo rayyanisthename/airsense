@@ -125,7 +125,12 @@ To run this project locally, follow these steps (The project already includes al
 ## 🧑‍💻 Author
 
 Made by **Team JF09**.
+
 -> Rayyan Siddiqui 10C
+
 -> Paarth Shekhar 10D
+
 -> Yashita Yadav 10F
+
 -> Mitanshi Rai 10F
+
