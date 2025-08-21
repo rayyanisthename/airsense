@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AirSense – Real-Time Air Quality</title>
+    <link rel="icon" type="image/png" href="favicon.png" />
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
@@ -15,7 +16,6 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
       rel="stylesheet"
     />
-    <!-- Font Awesome for hamburger icon -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
@@ -23,44 +23,51 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body
-    class="bg-gray-50 text-gray-900"
+    class="text-gray-900 modern-bg"
     style="
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     "
   >
     <!-- Sticky header -->
-    <header class="w-full bg-white shadow-sm sticky top-0 z-30">
+    <header class="w-full sticky top-0 z-30">
       <div
         class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"
       >
         <div class="flex items-center gap-4">
-          <!-- Hamburger button - now visible on all screen sizes -->
           <button id="hamburgerBtn" class="text-gray-600 text-2xl">
             <i class="fas fa-bars"></i>
           </button>
-          <h1 class="text-2xl md:text-3xl font-extrabold">🌍 AirSense</h1>
+          <h1
+            class="text-2xl md:text-3xl font-extrabold uppercase animated-gradient-text"
+          >
+            AIRSENSE - Real Time Air Quality
+          </h1>
         </div>
         <div class="flex gap-2 items-center">
-          <input
-            id="cityInput"
-            class="border rounded-lg px-3 py-2 text-sm"
-            placeholder="Enter city (e.g., Lucknow)"
-          />
-          <button
-            id="refreshBtn"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
-          >
-            Refresh
-          </button>
-          <button
-            id="locateBtn"
-            class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700"
-          >
-            📍 Use My Location
+          <div class="relative InputContainer">
+            <input
+              id="cityInput"
+              class="input"
+              placeholder="Enter city (e.g., Lucknow)"
+              autocomplete="off"
+            />
+            <div
+              id="citySuggestions"
+              class="hidden absolute top-full bg-white border rounded-lg mt-1 w-full z-50 shadow-lg"
+            ></div>
+          </div>
+          <button id="locateBtn" class="btn">
+            <strong>LOCATE ME</strong>
+            <div id="container-stars">
+              <div id="stars"></div>
+            </div>
+            <div id="glow">
+              <div class="circle"></div>
+              <div class="circle"></div>
+            </div>
           </button>
         </div>
       </div>
-      <!-- Inline alert banner (shown during high AQI) -->
       <div id="alertBanner" class="hidden">
         <div class="max-w-6xl mx-auto px-4 py-2">
           <div class="flex items-start md:items-center gap-2 text-sm">
@@ -77,48 +84,69 @@
       </div>
     </header>
 
-    <!-- Side Menu / Hamburger Menu -->
     <nav
       id="sideMenu"
       class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-40"
     >
       <div class="p-4 flex justify-between items-center border-b">
-        <h2 class="text-xl font-bold">AirSense Menu</h2>
-        <button id="closeMenuBtn" class="text-gray-600 text-2xl">
+        <h2 class="text-xl font-bold uppercase animated-gradient-text">
+          AIRSENSE Menu
+        </h2>
+        <button
+          id="closeMenuBtn"
+          class="text-gray-500 text-2xl hover:text-gray-800 hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <ul class="py-4">
+      <ul class="p-2 space-y-1">
         <li>
           <a
             href="#"
-            class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+            class="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg mx-2 hover:bg-gray-100 transition-colors"
             data-page="main-dashboard"
-            >Dashboard</a
+          >
+            <i class="fas fa-th-large w-5 text-center"></i>
+            <span>Dashboard</span></a
           >
         </li>
         <li>
           <a
             href="#"
-            class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+            class="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg mx-2 hover:bg-gray-100 transition-colors"
             data-page="pollutants-page"
-            >Pollutants Detail</a
+          >
+            <i class="fas fa-atom w-5 text-center"></i>
+            <span>Pollutants Detail</span></a
           >
         </li>
         <li>
           <a
             href="#"
-            class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+            class="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg mx-2 hover:bg-gray-100 transition-colors"
             data-page="ai-chat-page"
-            >AI Chat</a
+          >
+            <i class="fas fa-robot w-5 text-center"></i> <span>AI Chat</span></a
           >
         </li>
         <li>
           <a
             href="#"
-            class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+            class="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg mx-2 hover:bg-gray-100 transition-colors"
+            data-page="health-problems-page"
+          >
+            <i class="fas fa-book-medical w-5 text-center"></i>
+            <span>Health Info</span></a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg mx-2 hover:bg-gray-100 transition-colors"
             data-page="community-page"
-            >Community</a
+          >
+            <i class="fas fa-users w-5 text-center"></i>
+            <span>Community</span></a
           >
         </li>
       </ul>
@@ -138,28 +166,83 @@
       >
         <div class="md:col-span-2">
           <div id="map" class="w-full h-96 rounded-xl shadow"></div>
-          <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white rounded-xl p-4 shadow">
-              <h3 class="font-semibold mb-1">Air Quality</h3>
-              <div id="aqiBadge" class="text-3xl font-extrabold">--</div>
-              <div id="statusText" class="text-sm text-gray-600">
-                Awaiting data…
+          <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="info-card">
+              <div class="flex items-start gap-4">
+                <div class="info-card-icon bg-blue-100 text-blue-600">
+                  <i class="fas fa-wind"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-semibold text-gray-600">Air Quality</h3>
+                  <div class="mt-1">
+                    <p id="aqiBadge" class="text-3xl font-extrabold">--</p>
+                    <p id="statusText" class="text-sm text-gray-600">
+                      Awaiting data…
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="bg-white rounded-xl p-4 shadow">
-              <h3 class="font-semibold mb-1">Temperature</h3>
-              <div id="tempBadge" class="text-3xl font-extrabold">--</div>
-              <div id="tempStatusText" class="text-sm text-gray-600">
-                Awaiting data…
+            <div class="info-card">
+              <div class="flex items-start gap-4">
+                <div class="info-card-icon bg-orange-100 text-orange-600">
+                  <i class="fas fa-thermometer-half"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-semibold text-gray-600">Temperature</h3>
+                  <div class="mt-1">
+                    <p id="tempBadge" class="text-3xl font-extrabold">--</p>
+                    <p id="tempStatusText" class="text-sm text-gray-600">
+                      Awaiting data…
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="bg-white rounded-xl p-4 shadow">
-              <h3 class="font-semibold mb-1">Health Advice</h3>
-              <p id="adviceText" class="text-sm">—</p>
+            <div class="info-card">
+              <div class="flex items-start gap-4">
+                <div class="info-card-icon bg-green-100 text-green-600">
+                  <i class="fas fa-heartbeat"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-semibold text-gray-600">Health Advice</h3>
+                  <p id="adviceText" class="text-sm mt-1">—</p>
+                </div>
+              </div>
             </div>
-            <div class="bg-white rounded-xl p-4 shadow">
-              <h3 class="font-semibold mb-1">Last Update</h3>
-              <p id="timeText" class="text-xs text-gray-500">—</p>
+            <div class="info-card">
+              <div class="flex items-start gap-4">
+                <div class="info-card-icon bg-gray-100 text-gray-600">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-semibold text-gray-600">Last Update</h3>
+                  <p id="timeText" class="text-sm mt-1">—</p>
+                </div>
+              </div>
+            </div>
+            <div class="info-card sm:col-span-2">
+              <div class="flex items-start gap-4">
+                <div class="info-card-icon bg-cyan-100 text-cyan-600">
+                  <i class="fas fa-cloud-sun"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-semibold text-gray-600">Weather Details</h3>
+                  <div class="text-sm mt-1 space-y-1 text-gray-600">
+                    <p>
+                      Humidity:
+                      <span id="humidityText" class="font-semibold">--</span>
+                    </p>
+                    <p>
+                      Wind: <span id="windText" class="font-semibold">--</span>
+                    </p>
+                    <p>
+                      Pressure:
+                      <span id="pressureText" class="font-semibold">--</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -172,12 +255,20 @@
               (traffic peaks around 9am & 5pm).
             </p>
           </div>
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold mb-2">7-Day Historical AQI</h3>
+            <canvas id="historicalAqiChart" height="220"></canvas>
+          </div>
 
           <div class="bg-white rounded-xl p-4 shadow">
             <h3 class="font-semibold mb-2">Layers</h3>
             <label class="flex items-center gap-2 text-sm">
               <input id="zoneToggle" type="checkbox" class="h-4 w-4" />
               <span>Show Zone Shading</span>
+            </label>
+            <label class="flex items-center gap-2 text-sm mt-2">
+              <input id="stationToggle" type="checkbox" class="h-4 w-4" />
+              <span>Show AQI Stations</span>
             </label>
           </div>
 
@@ -216,7 +307,6 @@
           id="pollutantsDetailGrid"
           class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          <!-- Placeholder content (will be replaced by JS once data loads) -->
           <div class="pollutant-card">
             <h3 class="font-semibold mb-2">PM2.5 🌫️</h3>
             <div class="pollutant-value" style="color: #9ca3af">--</div>
@@ -287,7 +377,6 @@
           <div id="communityUserChip" class="text-sm"></div>
         </div>
 
-        <!-- Auth Cards (shown if not logged in) -->
         <div id="authWrapper" class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white rounded-xl shadow p-4">
             <h3 class="text-xl font-bold mb-4">Register</h3>
@@ -343,12 +432,10 @@
           </div>
         </div>
 
-        <!-- Logged-in UI -->
         <div
           id="communityApp"
           class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6"
         >
-          <!-- Left: Create Post -->
           <div class="lg:col-span-1 space-y-4">
             <div class="bg-white rounded-xl shadow p-4">
               <div class="flex items-center justify-between mb-2">
@@ -393,7 +480,6 @@
             </div>
           </div>
 
-          <!-- Right: Feed -->
           <div class="lg:col-span-2">
             <div class="bg-white rounded-xl shadow p-4">
               <div class="flex items-center justify-between mb-2">
@@ -419,23 +505,84 @@
           </div>
         </div>
       </section>
+
+      <!-- Health Problems Page -->
+      <section id="health-problems-page" class="hidden md:col-span-3">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-3xl font-bold text-center mb-8">
+            Health Effects of Air Pollution
+          </h2>
+
+          <div
+            id="health-filters"
+            class="flex space-x-3 overflow-x-auto pb-4 mb-6"
+          >
+            <button
+              data-health-problem="cardiovascular"
+              class="health-filter-btn px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold transition-colors duration-200 flex-shrink-0"
+            >
+              <i class="fas fa-heartbeat mr-2"></i>Heart Issues
+            </button>
+            <button
+              data-health-problem="respiratory"
+              class="health-filter-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-colors duration-200 flex-shrink-0"
+            >
+              <i class="fas fa-lungs mr-2"></i>Asthma
+            </button>
+            <button
+              data-health-problem="allergies"
+              class="health-filter-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-colors duration-200 flex-shrink-0"
+            >
+              <i class="fas fa-allergies mr-2"></i>Allergies
+            </button>
+            <button
+              data-health-problem="neurological"
+              class="health-filter-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-colors duration-200 flex-shrink-0"
+            >
+              <i class="fas fa-brain mr-2"></i>Neurological
+            </button>
+            <button
+              data-health-problem="cancer"
+              class="health-filter-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-colors duration-200 flex-shrink-0"
+            >
+              <i class="fas fa-disease mr-2"></i>Cancer Risk
+            </button>
+          </div>
+
+          <div
+            id="health-info-card"
+            class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center"
+          >
+            <div
+              class="bg-blue-100 p-4 rounded-full text-blue-600 mb-4 inline-flex flex-shrink-0"
+            >
+              <i class="fas fa-heartbeat fa-2x"></i>
+            </div>
+            <h3 id="health-title" class="text-xl font-bold mb-2">
+              Cardiovascular Diseases
+            </h3>
+            <p id="health-description" class="text-gray-600 text-sm">
+              Fine particulate matter (PM2.5) can enter the bloodstream, leading
+              to inflammation, increased blood pressure, and a higher risk of
+              heart attacks and strokes.
+            </p>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="max-w-6xl mx-auto px-4 pb-8 text-xs text-gray-500">
-      Made by team TF09.
+      Made by team JF09.
     </footer>
 
-    <!-- Toast container (bottom-right) -->
     <div id="toastContainer"></div>
 
-    <!-- Load Firebase SDKs first -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
       import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js";
       import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
       import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
 
-      // Your web app's Firebase configuration
       const firebaseConfig = {
         apiKey: "AIzaSyDHmbWAXGaNBpSBvJgKVCWLT_w76mB-ues",
         authDomain: "airsensetf09.firebaseapp.com",
@@ -446,25 +593,20 @@
         measurementId: "G-FCBGNSNNFS",
       };
 
-      // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
 
-      // Make Firebase instances available globally
       window.firebaseApp = app;
       window.firebaseAuth = auth;
       window.firebaseDB = db;
       window.firebaseAnalytics = getAnalytics(app);
     </script>
 
-    <!-- Add Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Add Leaflet.js -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <!-- Then load your script -->
     <script src="script.js" type="module"></script>
   </body>
 </html>
