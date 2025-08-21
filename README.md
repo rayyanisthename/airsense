@@ -1,48 +1,124 @@
-🌍 AirSense – Real-Time Air Quality & Pollution Monitor
+<div align="center">
+  <h1 align="center">
+    🌍 AirSense – Real-Time Air Quality & Intelligence Platform
+  </h1>
+  <p align="center">
+    A comprehensive, interactive web application for monitoring air quality, viewing environmental data, and engaging with a community of environmentally-conscious users.
+  </p>
+</div>
 
-AirSense is a web-based smart pollution monitoring system that visualizes real-time Air Quality Index (AQI) data across multiple monitoring stations in a city.
-It helps people understand local pollution levels, get health alerts, and see how air quality changes throughout the day.
+---
 
-✨ Features
+AirSense provides a feature-rich dashboard that goes beyond simple AQI numbers. It integrates real-time data from multiple sources to deliver actionable insights through an intuitive, modern interface. Users can check local pollution levels, receive health alerts, analyze trends, interact with an AI assistant, and even participate in community-driven environmental initiatives.
 
-📍 Interactive Map – View AQI from multiple monitoring stations in a city.
+## ✨ Core Features
 
-🔥 Heatmap Overlay – Visualize pollution intensity zones across the city.
+### Real-Time Data & Mapping
 
-📊 Forecasting Chart – Simple 12-hour AQI forecast (traffic peaks, night dips).
+- **Interactive Leaflet Map**: Smooth, responsive map interface to visualize environmental data.
+- **Geolocation**: Automatically detects user location via GPS (with IP-based fallback) to provide instant local data.
+- **City Search**: Find air quality information for any city worldwide with auto-suggestions.
+- **AQI Station View**: Display individual monitoring stations on the map, each with its real-time AQI value. Click any station for a detailed data breakdown.
+- **Zone Shading Overlay**: A conceptual feature to visualize pollution intensity zones across the map.
 
-🏥 Health Guidance – Personalized alerts (e.g., “Wear a mask”, “Safe to go outside”).
+### Health & Safety
 
-🏙 Multi-Station Support – Averages AQI from several stations for accuracy.
+- **Personalized Health Advice**: Get clear, actionable health recommendations based on the current AQI.
+- **Configurable Alerts**: Receive on-page toast notifications for significant changes in air quality.
+- **Browser Push Notifications**: Opt-in to get system-level notifications about poor air quality, even when the app is in the background.
+- **Detailed Health Info Page**: An interactive section explaining the effects of different pollutants on cardiovascular, respiratory, and neurological health.
 
-⚡ Lightweight UI – Built with HTML, CSS, JavaScript, Leaflet.js & Chart.js.
+### Analytics & Forecasting
 
-🛠 Tech Stack
+- **Complete Weather Metrics**: View current temperature, humidity, wind speed, and atmospheric pressure.
+- **12-Hour AQI Forecast**: A predictive chart showing the estimated AQI for the next 12 hours.
+- **7-Day Historical AQI**: A bar chart displaying the average AQI for the past week, helping users identify trends.
+- **Detailed Pollutant Breakdown**: See specific concentration values for major pollutants like PM2.5, PM10, O₃, NO₂, SO₂, and CO.
 
-Frontend: HTML5, CSS3, Vanilla JavaScript
+### Interactive Tools
 
-Mapping: Leaflet.js (OpenStreetMap)
+- **AI Chat Assistant**: Powered by the Groq API, the assistant answers questions about air quality, providing context-aware responses based on the user's current data.
+- **Modern, Glassmorphic UI**: A beautiful and responsive interface with light and dark modes that adapts to system preferences.
 
-Charts: Chart.js
+### Community Engagement (Powered by Firebase)
 
-Heatmap: Leaflet.heat
+- **User Authentication**: Secure user registration and login.
+- **Community Feed**: Users can post photos and captions of their environmental initiatives (e.g., planting a tree, carpooling).
+- **Points & Leaderboard**: Earn points for posting and climb the leaderboard, gamifying positive environmental action.
+- **Likes**: Engage with other users' posts by liking them.
 
-Data API: AQICN (Air Quality Open Data Platform)
+## 🛠️ Technology Stack
 
-🚀 How It Works
+- **Frontend**:
+  - HTML5, CSS3, Vanilla JavaScript (ES6 Modules)
+  - **Styling**: Tailwind CSS for a utility-first workflow.
+  - **Mapping**: Leaflet.js with OpenStreetMap tiles.
+  - **Charts**: Chart.js for all data visualizations.
+- **Backend & Database**:
+  - **Firebase**: Used for Authentication and Firestore (NoSQL Database) to manage users, posts, and points.
+- **APIs**:
+  - **AQICN API**: For real-time Air Quality Index (AQI) data.
+  - **OpenWeatherMap API**: For detailed, real-time weather data.
+  - **Groq API**: Powers the AI Chat Assistant.
+  - **ipapi.co**: For IP-based geolocation as a fallback.
 
-User selects a city.
+## 🚀 Getting Started
 
-AirSense fetches real-time AQI data from AQICN’s API (using your API token).
+To run this project locally, follow these steps:
 
-The system plots stations on the map, generates a heatmap, and updates the forecast chart.
+1.  **Clone the repository:**
 
-Health tips and alerts are displayed based on AQI category.
+    ```bash
+    git clone https://github.com/your-username/airsense.git
+    cd airsense
+    ```
 
-📌 Use Cases
+2.  **Configure API Keys:**
+    Open `script.js` and replace the placeholder API keys with your own:
 
-Students & citizens checking daily air quality before outdoor activities.
+    ```javascript
+    const TOKEN = "YOUR_AQICN_API_TOKEN";
+    const OPENWEATHER_API_KEY = "YOUR_OPENWEATHERMAP_API_KEY";
+    const GROQ_API_KEY = "YOUR_GROQ_API_KEY";
+    ```
 
-Environmental clubs or hackathons to demonstrate real-time pollution monitoring.
+3.  **Set up Firebase:**
 
-Awareness projects to promote health and sustainability.
+    - Create a new project on the Firebase Console.
+    - Enable **Authentication** (with Email/Password provider) and **Firestore Database**.
+    - In your Firebase project settings, find your web app's configuration object.
+    - Open `index.html` and replace the existing `firebaseConfig` object with yours:
+
+    ```html
+    <script type="module">
+      // ...
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID",
+        measurementId: "YOUR_MEASUREMENT_ID",
+      };
+      // ...
+    </script>
+    ```
+
+4.  **Run the application:**
+    Since the project uses ES6 modules, you need to serve the files from a local web server. You can use the Live Server extension in VS Code or a simple command-line server.
+
+    ```bash
+    # If you have Python 3
+    python -m http.server
+
+    # Or if you have Node.js and serve installed
+    npm install -g serve
+    serve .
+    ```
+
+    Then, open your browser and navigate to `http://localhost:8000` (or the port provided by your server).
+
+## 🧑‍💻 Author
+
+Made by **Team JF09**.
