@@ -74,6 +74,7 @@ To run this project locally, follow these steps (The project already includes al
     ```
 
 2.  **Configure API Keys:** (Already in the project)
+
     Open `script.js` and replace the placeholder API keys with your own:
 
     ```javascript
@@ -82,7 +83,7 @@ To run this project locally, follow these steps (The project already includes al
     const GROQ_API_KEY = "YOUR_GROQ_API_KEY";
     ```
 
-3.  **Set up Firebase:** (Already in the project)
+4.  **Set up Firebase:** (Already in the project)
 
     - Create a new project on the Firebase Console.
     - Enable **Authentication** (with Email/Password provider) and **Firestore Database**.
@@ -105,7 +106,7 @@ To run this project locally, follow these steps (The project already includes al
     </script>
     ```
 
-4.  **Run the application:**
+5.  **Run the application:**
     Since the project uses ES6 modules, you need to serve the files from a local web server. You can use the Live Server extension in VS Code or a simple command-line server.
 
     ```bash
