@@ -335,7 +335,7 @@ header {
 }
 
 .InputContainer {
-  width: 210px;
+  width: 100%; /* Make it full width on small screens */
   height: 50px;
   display: flex;
   align-items: center;
@@ -351,7 +351,7 @@ header {
 }
 
 .input {
-  width: 200px;
+  width: 100%; /* Make it full width */
   height: 40px;
   border: none;
   outline: none;
@@ -377,7 +377,7 @@ header {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 13rem;
+  /* width: 13rem; Removed fixed width */
   overflow: hidden;
   height: 3rem;
   background-size: 300% 300%;
