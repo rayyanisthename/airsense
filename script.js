@@ -1,17 +1,6 @@
-// --- Existing code (shortened header here) ---
-// (This file includes the original dashboard + chat logic,
-// plus new Community features: auth-gated page, photo uploads, likes, leaderboard.)
-
-// Replace the Firebase initialization at the top with:
 const auth = window.firebaseAuth;
 const db = window.firebaseDB;
 
-// Remove these imports since we're using the global instances:
-// import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-// import { getAuth, ... } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-// import { getFirestore, ... } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-// Keep these Firebase function imports:
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -33,26 +22,38 @@ const TOKEN = "78ad5047b37a2438465bf25d5a2f922136fc384f";
 const OPENWEATHER_API_KEY = "7098c9a22e0d5e4e9fbe0d5168291da4";
 const GROQ_API_KEY = "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";
 
-const DEFAULT_CENTER = [26.8467, 80.9462]; // Lucknow fallback
+const DEFAULT_CENTER = [26.8467, 80.9462];
+const DEFAULT_BOUNDS = [
+  [-10, 40],
+  [75, 150],
+];
 
-let map = L.map("map").setView(DEFAULT_CENTER, 12);
+let map = L.map("map").setView([20, 0], 2);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "&copy; OpenStreetMap contributors",
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 }).addTo(map);
 
 let userMarker = null;
+let stationMarkersLayerGroup = L.layerGroup().addTo(map);
+let lastQuery = null;
+let isFlyingToStation = false;
+let isDetailViewActive = false;
 
-// UI refs (existing elements)
-const refreshBtn = document.getElementById("refreshBtn");
 const locateBtn = document.getElementById("locateBtn");
 const aqiBadge = document.getElementById("aqiBadge");
+const cityInput = document.getElementById("cityInput");
+const citySuggestions = document.getElementById("citySuggestions");
 const statusText = document.getElementById("statusText");
 const adviceText = document.getElementById("adviceText");
 const timeText = document.getElementById("timeText");
 const tempBadge = document.getElementById("tempBadge");
 const tempStatusText = document.getElementById("tempStatusText");
 
-// Alerts UI (existing elements)
+const humidityText = document.getElementById("humidityText");
+const windText = document.getElementById("windText");
+const pressureText = document.getElementById("pressureText");
+
 const alertsToggle = document.getElementById("alertsToggle");
 const pushToggle = document.getElementById("pushToggle");
 const testAlertBtn = document.getElementById("testAlertBtn");
@@ -63,37 +64,37 @@ const alertBannerBadge = document.getElementById("alertBannerBadge");
 const alertBannerDismiss = document.getElementById("alertBannerDismiss");
 const toastContainer = document.getElementById("toastContainer");
 
-// Hamburger menu refs
+const stationToggle = document.getElementById("stationToggle");
+
 const hamburgerBtn = document.getElementById("hamburgerBtn");
 const sideMenu = document.getElementById("sideMenu");
 const closeMenuBtn = document.getElementById("closeMenuBtn");
 const overlay = document.getElementById("overlay");
 const navLinks = document.querySelectorAll("#sideMenu a[data-page]");
 
-// Page sections
 const mainDashboard = document.getElementById("main-dashboard");
 const pollutantsPage = document.getElementById("pollutants-page");
 const aiChatPage = document.getElementById("ai-chat-page");
 const communityPage = document.getElementById("community-page");
+const healthProblemsPage = document.getElementById("health-problems-page");
 const pollutantsDetailGrid = document.getElementById("pollutantsDetailGrid");
+const historicalAqiChartCanvas = document.getElementById("historicalAqiChart");
 
-// AI Chat refs
 const chatMessages = document.getElementById("chatMessages");
 const chatInput = document.getElementById("chatInput");
 const sendMessageBtn = document.getElementById("sendMessageBtn");
 
-// Community refs
 const authWrapper = document.getElementById("authWrapper");
 const communityApp = document.getElementById("communityApp");
 const communityUserChip = document.getElementById("communityUserChip");
 
 const regName = document.getElementById("regName");
-const regEmail = document.getElementById("regEmail"); // New
+const regEmail = document.getElementById("regEmail");
 const regPass = document.getElementById("regPass");
 const regBtn = document.getElementById("regBtn");
 
 const loginName = document.getElementById("loginName");
-const loginEmail = document.getElementById("loginEmail"); // New
+const loginEmail = document.getElementById("loginEmail");
 const loginPass = document.getElementById("loginPass");
 const loginBtn = document.getElementById("loginBtn");
 
@@ -106,7 +107,21 @@ const emptyFeed = document.getElementById("emptyFeed");
 const leaderboardList = document.getElementById("leaderboardList");
 const refreshFeedBtn = document.getElementById("refreshFeedBtn");
 
-/* ------------------------------ Utilities ------------------------------ */
+const healthFilterBtns = document.querySelectorAll(".health-filter-btn");
+const healthInfoCard = document.getElementById("health-info-card");
+const healthTitle = document.getElementById("health-title");
+const healthDescription = document.getElementById("health-description");
+const healthIconContainer =
+  healthInfoCard?.querySelector("div > i").parentElement;
+
+function debounce(func, delay) {
+  let timeout;
+  return function (...args) {
+    const context = this;
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(context, args), delay);
+  };
+}
 
 function showToast({ title, message, level = 2 }) {
   if (!toastContainer) return;
@@ -150,7 +165,6 @@ function loadLS(key, fallback) {
   }
 }
 
-// Replace the existing localStorage functions with these Firebase versions
 async function getUsers() {
   const querySnapshot = await getDocs(collection(db, "users"));
   return querySnapshot.docs.map((doc) => ({
@@ -168,7 +182,233 @@ async function getPosts() {
   }));
 }
 
-/* --------------------------- Community Logic --------------------------- */
+function initTheme() {
+  const savedTheme = localStorage.getItem("theme");
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = savedTheme || (prefersDark ? "dark" : "light");
+  applyTheme(theme);
+}
+
+function applyTheme(theme) {
+  if (historicalAqiChart) {
+    if (theme === "dark") {
+    } else {
+    }
+    historicalAqiChart.update();
+  }
+}
+
+function updateDashboardUI(data) {
+  const {
+    aqi,
+    station,
+    time,
+    temperature,
+    weatherDesc,
+    humidity,
+    windSpeed,
+    pressure,
+    source,
+    advice: customAdvice,
+    forecast,
+    iaqi,
+  } = data;
+
+  const aqiCat = aqiCategory(aqi);
+  aqiBadge.style.color = aqiCat.color;
+  aqiBadge.textContent = isNaN(aqi) ? "--" : aqi;
+
+  let statusString = aqiCat.label;
+  if (station) statusString += ` – ${station}`;
+  if (source === "ip") statusString += " (approx.)";
+  statusText.textContent = statusString;
+
+  adviceText.textContent = customAdvice || aqiCat.advice;
+  timeText.textContent = `Updated: ${time || new Date().toLocaleTimeString()}`;
+
+  if (temperature != null) {
+    const tempCat = tempCategory(temperature);
+    tempBadge.style.color = tempCat.color;
+    tempBadge.textContent = `${temperature.toFixed(1)}°C`;
+    tempStatusText.textContent = `${tempCat.label} (${weatherDesc || "N/A"})`;
+    humidityText.textContent = `${humidity}%`;
+    windText.textContent = `${windSpeed.toFixed(1)} m/s`;
+    pressureText.textContent = `${pressure} hPa`;
+  } else {
+    tempBadge.textContent = "--";
+    tempBadge.style.color = "#9ca3af";
+    tempStatusText.textContent = "N/A";
+    humidityText.textContent = "--";
+    windText.textContent = "--";
+    pressureText.textContent = "--";
+  }
+
+  window.lastAqiData = { ...window.lastAqiData, ...data };
+  updatePollutants(iaqi);
+  updateForecastChartWith(buildForecastSeries(aqi));
+  updateHistoricalChart(forecast?.daily);
+  maybeAlert({ avg: aqi, cat: aqiCat });
+}
+
+function createAqiIcon(aqi) {
+  const category = aqiCategory(aqi);
+  const aqiValue = isNaN(aqi) ? "-" : aqi;
+  return L.divIcon({
+    html: `<div style="background-color: ${category.color};" class="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md">${aqiValue}</div>`,
+    className: "",
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+}
+
+async function displayStationsOnMap(stations) {
+  stationMarkersLayerGroup.clearLayers();
+  if (userMarker) {
+    map.removeLayer(userMarker);
+    userMarker = null;
+  }
+
+  stations.forEach((station) => {
+    if (!station.lat || !station.lon || station.aqi === "-") return;
+
+    const aqi = parseInt(station.aqi);
+    if (isNaN(aqi)) return;
+
+    const marker = L.marker([station.lat, station.lon], {
+      icon: createAqiIcon(aqi),
+    }).bindPopup(
+      `<b>${station.station.name}</b><br>AQI: ${aqi}<br><small>Click for details</small>`
+    );
+
+    marker.on("click", () => {
+      refreshWithStationId(station.uid);
+    });
+
+    stationMarkersLayerGroup.addLayer(marker);
+  });
+
+  const validStations = stations.filter((s) => !isNaN(parseInt(s.aqi)));
+  const avgAqi =
+    validStations.reduce((acc, s) => acc + parseInt(s.aqi), 0) /
+    (validStations.length || 1);
+  updateDashboardUI({
+    aqi: Math.round(avgAqi),
+    station: `${validStations.length} stations in view`,
+    advice: "Click a station or search for a city for details.",
+    temperature: null,
+  });
+}
+
+async function refreshWithBounds(bounds) {
+  lastQuery = { type: "bounds", value: bounds };
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+  const latlng = `${sw.lat},${sw.lng},${ne.lat},${ne.lng}`;
+  const url = `https://api.waqi.info/v2/map/bounds?latlng=${latlng}&token=${TOKEN}`;
+
+  statusText.textContent = "Fetching all stations in view...";
+  try {
+    const res = await fetch(url);
+    const result = await res.json();
+    if (result.status !== "ok") {
+      throw new Error(result.data || "Failed to fetch stations");
+    }
+    await displayStationsOnMap(result.data);
+    map.fitBounds(bounds);
+  } catch (e) {
+    console.error("Error fetching stations by bounds:", e);
+    statusText.textContent = "⚠ Error fetching stations.";
+    showToast({ title: "Error", message: e.message, level: 3 });
+  }
+}
+
+async function refreshWithStationId(uid) {
+  aqiBadge.textContent = "…";
+  statusText.textContent = "Fetching station data…";
+  try {
+    const feedUrl = `https://api.waqi.info/feed/@${uid}/?token=${TOKEN}`;
+    const res = await fetch(feedUrl);
+    const data = await res.json();
+    if (data.status !== "ok") throw new Error("Failed to fetch station data");
+
+    const stationData = data.data;
+    const { aqi, iaqi, time, forecast } = stationData;
+    const { name, geo } = stationData.city;
+    const lat = geo[0];
+    const lon = geo[1];
+
+    let weatherInfo = {};
+    if (lat && lon) {
+      const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${OPENWEATHER_API_KEY}`;
+      try {
+        const weatherRes = await fetch(weatherUrl);
+        const weatherData = await weatherRes.json();
+        if (weatherData.cod === 200) {
+          weatherInfo = {
+            temperature: weatherData.main?.temp,
+            weatherDesc: weatherData.weather?.[0]?.description,
+            humidity: weatherData.main?.humidity,
+            windSpeed: weatherData.wind?.speed,
+            pressure: weatherData.main?.pressure,
+          };
+        }
+      } catch (e) {
+        console.warn("Could not fetch weather for station", e);
+      }
+    }
+
+    updateDashboardUI({
+      aqi: parseInt(aqi),
+      iaqi,
+      station: name,
+      time: time?.s,
+      ...weatherInfo,
+      lat,
+      lon,
+      forecast,
+    });
+    isDetailViewActive = true;
+    isFlyingToStation = true;
+    map.flyTo([lat, lon], 13);
+  } catch (e) {
+    console.error("Error fetching station details:", e);
+    showToast({
+      title: "Error",
+      message: "Could not load station details.",
+      level: 3,
+    });
+    statusText.textContent = "⚠ Error loading station.";
+    isDetailViewActive = false;
+  }
+}
+
+const RefreshControl = L.Control.extend({
+  options: { position: "topright" },
+  onAdd: function (map) {
+    const container = L.DomUtil.create(
+      "div",
+      "leaflet-bar leaflet-control leaflet-control-refresh"
+    );
+    const link = L.DomUtil.create("a", "", container);
+    link.href = "#";
+    link.title = "Refresh Data";
+    link.innerHTML = '<i class="fas fa-sync-alt"></i>';
+
+    L.DomEvent.disableClickPropagation(container).on(link, "click", (ev) => {
+      L.DomEvent.stop(ev);
+      if (lastQuery) {
+        if (lastQuery.type === "bounds") refreshWithBounds(lastQuery.value);
+        else if (lastQuery.type === "coords")
+          refreshWithCoords(lastQuery.value[0], lastQuery.value[1]);
+        else if (lastQuery.type === "city") refreshWithCity(lastQuery.value);
+      } else {
+        fetchUserLocationAndData(); // Fallback to user's location if no context
+      }
+    });
+    return container;
+  },
+});
+new RefreshControl().addTo(map);
 
 function renderAuthState() {
   const user = getSessionUser();
@@ -303,10 +543,9 @@ async function renderFeed() {
   }
 }
 
-// Update user registration
 async function registerUser() {
   const name = (regName.value || "").trim();
-  const email = (regEmail.value || "").trim(); // New
+  const email = (regEmail.value || "").trim();
   const pass = (regPass.value || "").trim();
 
   if (!name || !email || !pass) {
@@ -319,14 +558,12 @@ async function registerUser() {
   }
 
   try {
-    // Create auth user with email
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
       pass
     );
 
-    // Add to Firestore users collection
     await addDoc(collection(db, "users"), {
       uid: userCredential.user.uid,
       name: name,
@@ -340,7 +577,7 @@ async function registerUser() {
       message: "Now login to continue.",
       level: 2,
     });
-    loginEmail.value = email; // Update this to email field
+    loginEmail.value = email;
   } catch (error) {
     showToast({
       title: "Registration failed",
@@ -350,15 +587,13 @@ async function registerUser() {
   }
 }
 
-// Update login
 async function loginUser() {
-  const email = (loginEmail.value || "").trim(); // Changed from name to email
+  const email = (loginEmail.value || "").trim();
   const pass = (loginPass.value || "").trim();
 
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, pass);
 
-    // Get user details from Firestore
     const usersRef = collection(db, "users");
     const q = query(usersRef);
     const querySnapshot = await getDocs(q);
@@ -368,7 +603,7 @@ async function loginUser() {
 
     if (userDoc) {
       const userData = userDoc.data();
-      setSessionUser(userData.name); // Store the name for display
+      setSessionUser(userData.name);
       loginPass.value = "";
       renderAuthState();
       renderFeed();
@@ -384,7 +619,6 @@ async function loginUser() {
   }
 }
 
-// Update logout
 async function logoutUser() {
   try {
     await signOut(auth);
@@ -396,7 +630,6 @@ async function logoutUser() {
   }
 }
 
-// Update post submission
 async function handlePostSubmit() {
   const me = getSessionUser();
   if (!me) {
@@ -420,12 +653,10 @@ async function handlePostSubmit() {
     return;
   }
 
-  // Disable button and show loading state
   submitPostBtn.disabled = true;
   submitPostBtn.textContent = "Posting...";
 
   try {
-    // Convert image to base64
     const base64Image = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -433,7 +664,6 @@ async function handlePostSubmit() {
       reader.readAsDataURL(file);
     });
 
-    // First check if user exists and get their document
     const usersRef = collection(db, "users");
     const userQuery = query(usersRef, where("name", "==", me));
     const userSnapshot = await getDocs(userQuery);
@@ -445,7 +675,6 @@ async function handlePostSubmit() {
     const userDoc = userSnapshot.docs[0];
     const userData = userDoc.data();
 
-    // Create the post
     const postRef = await addDoc(collection(db, "posts"), {
       user: me,
       userId: userDoc.id,
@@ -455,24 +684,20 @@ async function handlePostSubmit() {
       likes: [],
     });
 
-    // Update user points
     const newPoints = (userData.points || 0) + 5;
     await updateDoc(userDoc.ref, {
       points: newPoints,
     });
 
-    // Reset form
     postImage.value = "";
     postText.value = "";
 
-    // Show success message
     showToast({
       title: "Posted Successfully! 🎉",
       message: `+5 points added! You now have ${newPoints} points`,
       level: 1,
     });
 
-    // Refresh feed and leaderboard immediately
     await Promise.all([renderFeed(), renderLeaderboard()]);
   } catch (error) {
     console.error("Post error:", error);
@@ -482,15 +707,11 @@ async function handlePostSubmit() {
       level: 3,
     });
   } finally {
-    // Reset button state
     submitPostBtn.disabled = false;
     submitPostBtn.textContent = "Share Post";
   }
 }
 
-// Remove the updateUserPoints function since we're handling points directly in handlePostSubmit
-
-// Update like toggle
 async function toggleLike(postId) {
   const me = getSessionUser();
   if (!me) {
@@ -537,17 +758,6 @@ function onEnterCommunityPage() {
   }
 }
 
-/* --------------------- Existing Dashboard/Chat Logic -------------------- */
-
-// (Copied from your previous file, with minimal changes where necessary)
-// ... START of original logic ...
-
-// AI chat helpers and rest of app (same as your existing script.js but included here for completeness)
-
-/**
- * Global variable to store the last fetched AQI data, including location and time.
- * This will be used to provide context to the AI chat.
- */
 window.lastAqiData = {
   aqi: null,
   iaqi: {},
@@ -555,21 +765,22 @@ window.lastAqiData = {
   time: null,
   temperature: null,
   weatherDesc: null,
+  humidity: null,
+  windSpeed: null,
+  pressure: null,
   lat: null,
   lon: null,
 };
 
 function showPage(pageId) {
-  // Hide all pages
   mainDashboard.classList.add("hidden");
   pollutantsPage.classList.add("hidden");
   aiChatPage.classList.add("hidden");
   communityPage.classList.add("hidden");
+  healthProblemsPage.classList.add("hidden");
 
-  // Show the requested page
   document.getElementById(pageId).classList.remove("hidden");
 
-  // Close the side menu if open
   sideMenu.classList.remove("open");
   overlay.classList.remove("open");
 
@@ -587,7 +798,6 @@ function showPage(pageId) {
   }
 }
 
-// Hamburger menu events
 hamburgerBtn?.addEventListener("click", () => {
   sideMenu.classList.toggle("open");
   overlay.classList.toggle("open");
@@ -603,12 +813,11 @@ overlay?.addEventListener("click", () => {
 navLinks.forEach((link) => {
   link.addEventListener("click", (e) => {
     e.preventDefault();
-    const page = e.target.dataset.page;
+    const page = e.currentTarget.dataset.page;
     showPage(page);
   });
 });
 
-// Chat UI
 function addChatMessage(sender, text, isThinking = false) {
   const messageDiv = document.createElement("div");
   messageDiv.className = `p-2 rounded-lg mb-2 ${
@@ -651,12 +860,23 @@ sendMessageBtn?.addEventListener("click", async () => {
       const weatherDescription = aqiData.weatherDesc || "N/A";
       const currentLat = aqiData.lat || "N/A";
       const currentLon = aqiData.lon || "N/A";
+      const currentHumidity =
+        aqiData.humidity != null ? `${aqiData.humidity}%` : "N/A";
+      const currentWind =
+        aqiData.windSpeed != null
+          ? `${aqiData.windSpeed.toFixed(1)} m/s`
+          : "N/A";
+      const currentPressure =
+        aqiData.pressure != null ? `${aqiData.pressure} hPa` : "N/A";
 
       const systemPrompt = `You are an AI Assistant providing air quality insights.
       Current Air Quality Index (AQI): ${currentAQI}
       Location: ${currentStation} (Latitude: ${currentLat}, Longitude: ${currentLon})
       Last Updated: ${lastUpdateTime}
       Current Temperature: ${currentTemperature}
+      Humidity: ${currentHumidity}
+      Wind Speed: ${currentWind}
+      Pressure: ${currentPressure}
       Weather Description: ${weatherDescription}
       Based on this data, provide helpful information or advice related to the user's query about air quality, weather, or general environmental concerns.
       Be concise and informative.
@@ -743,17 +963,99 @@ chatInput?.addEventListener("keypress", (e) => {
 });
 
 const forecastCtx = document.getElementById("forecastChart").getContext("2d");
+Chart.defaults.color = "#6b7280";
 let forecastChart = new Chart(forecastCtx, {
   type: "line",
   data: {
     labels: [],
-    datasets: [{ label: "Estimated AQI", data: [], fill: true, tension: 0.35 }],
+    datasets: [
+      {
+        label: "Estimated AQI",
+        data: [],
+        fill: true,
+        tension: 0.35,
+        borderColor: "#1d4ed8",
+        backgroundColor: "rgba(30, 64, 175, 0.1)",
+      },
+    ],
   },
   options: {
     plugins: { legend: { display: false } },
-    scales: { y: { suggestedMin: 0, suggestedMax: 300 } },
+    scales: {
+      y: {
+        suggestedMin: 0,
+        suggestedMax: 300,
+        grid: { color: "rgba(0, 0, 0, 0.1)" },
+      },
+      x: { grid: { color: "rgba(0, 0, 0, 0.1)" } },
+    },
   },
 });
+
+let historicalAqiChart = new Chart(historicalAqiChartCanvas.getContext("2d"), {
+  type: "bar",
+  data: {
+    labels: [],
+    datasets: [
+      {
+        label: "Daily Average AQI",
+        data: [],
+        backgroundColor: [],
+        borderColor: [],
+        borderWidth: 1,
+      },
+    ],
+  },
+  options: {
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: "rgba(0, 0, 0, 0.1)" },
+        ticks: { color: "#6b7280" },
+      },
+      x: {
+        grid: { display: false },
+        ticks: { color: "#6b7280" },
+      },
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            let label = context.dataset.label || "";
+            if (label) {
+              label += ": ";
+            }
+            if (context.parsed.y !== null) {
+              label += context.parsed.y;
+            }
+            return label;
+          },
+        },
+      },
+    },
+  },
+});
+
+function updateHistoricalChart(dailyForecast) {
+  if (!historicalAqiChart || !dailyForecast || !dailyForecast.pm25) return;
+
+  const pm25History = dailyForecast.pm25.slice(-7);
+
+  const labels = pm25History.map((d) =>
+    new Date(d.day).toLocaleDateString(undefined, { weekday: "short" })
+  );
+  const data = pm25History.map((d) => d.avg);
+  const backgroundColors = data.map((aqi) => aqiCategory(aqi).color);
+
+  historicalAqiChart.data.labels = labels;
+  historicalAqiChart.data.datasets[0].data = data;
+  historicalAqiChart.data.datasets[0].backgroundColor = backgroundColors;
+  historicalAqiChart.update();
+}
 
 function aqiCategory(aqi) {
   if (!aqi && aqi !== 0)
@@ -906,6 +1208,10 @@ async function fetchAQIAndTemperatureForCoords(lat, lon) {
         time: aqiData.data.time?.s,
         temperature: null,
         weatherDesc: null,
+        humidity: null,
+        windSpeed: null,
+        pressure: null,
+        forecast: aqiData.data.forecast,
         lat,
         lon,
       };
@@ -917,6 +1223,10 @@ async function fetchAQIAndTemperatureForCoords(lat, lon) {
       time: aqiData.data.time?.s,
       temperature: weatherData.main?.temp,
       tempFeelsLike: weatherData.main?.feels_like,
+      humidity: weatherData.main?.humidity,
+      windSpeed: weatherData.wind?.speed,
+      pressure: weatherData.main?.pressure,
+      forecast: aqiData.data.forecast,
       weatherDesc: weatherData.weather?.[0]?.description,
       lat,
       lon,
@@ -1016,12 +1326,15 @@ function updatePollutants(iaqi) {
   });
 }
 
-async function refreshWithCoords(lat, lon) {
+async function refreshWithCoords(lat, lon, source = "unknown") {
   if (isNaN(lat) || isNaN(lon)) {
     statusText.textContent = "⚠ Error: Invalid location data.";
     tempStatusText.textContent = "⚠ Error: Invalid location data.";
     return;
   }
+  isDetailViewActive = false; // Reset detail view when getting data for new coords
+  stationMarkersLayerGroup.clearLayers(); // Clear station markers
+  lastQuery = { type: "coords", value: [lat, lon] }; // Set last query
   aqiBadge.textContent = "…";
   statusText.textContent = "Fetching data…";
   adviceText.textContent = "—";
@@ -1030,12 +1343,16 @@ async function refreshWithCoords(lat, lon) {
   tempStatusText.textContent = "Fetching data…";
   try {
     const {
+      humidity,
+      windSpeed,
+      pressure,
       aqi,
       station,
       time,
       iaqi,
       temperature,
       tempFeelsLike,
+      forecast,
       weatherDesc,
       lat: fetchedLat,
       lon: fetchedLon,
@@ -1047,11 +1364,15 @@ async function refreshWithCoords(lat, lon) {
       time,
       temperature,
       tempFeelsLike,
+      humidity,
+      windSpeed,
+      pressure,
       weatherDesc,
+      forecast,
       lat: fetchedLat || lat,
       lon: fetchedLon || lon,
     };
-    updatePollutants(iaqi);
+    updateDashboardUI({ ...window.lastAqiData, source });
     if (userMarker) map.removeLayer(userMarker);
     userMarker = L.marker([lat, lon])
       .addTo(map)
@@ -1062,56 +1383,17 @@ async function refreshWithCoords(lat, lon) {
       easeLinearity: 0.25,
       animate: true,
     });
-    const aqiCat = aqiCategory(aqi);
-    aqiBadge.textContent = isNaN(aqi) ? "--" : aqi;
-    aqiBadge.style.color = aqiCat.color;
-    statusText.textContent = aqiCat.label;
-    adviceText.textContent = aqiCat.advice;
-    timeText.textContent = `Updated: ${
-      time || new Date().toLocaleTimeString()
-    }`;
-    if (temperature != null) {
-      const tempCat = tempCategory(temperature);
-      tempBadge.textContent = `${temperature.toFixed(1)}°C`;
-      tempBadge.style.color = tempCat.color;
-      tempStatusText.textContent = `${tempCat.label} (${weatherDesc || "N/A"})`;
-    } else {
-      tempBadge.textContent = "--";
-      tempStatusText.textContent = "N/A";
-      tempBadge.style.color = "#9ca3af";
-    }
-    const series = buildForecastSeries(aqi);
-    updateForecastChartWith(series);
-    maybeAlert({ avg: aqi, cat: aqiCat });
   } catch (e) {
     statusText.textContent = "⚠ Error fetching data: " + e.message;
     tempStatusText.textContent = "⚠ Error fetching data";
+    humidityText.textContent = "--";
+    windText.textContent = "--";
+    pressureText.textContent = "--";
   }
 }
 
 function useMyLocation() {
-  if (!navigator.geolocation) {
-    showToast({
-      title: "⚠ Location not supported",
-      message: "Your browser does not support geolocation.",
-      level: 2,
-    });
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      const { latitude, longitude } = pos.coords;
-      await refreshWithCoords(latitude, longitude);
-    },
-    (err) => {
-      showToast({
-        title: "⚠ Location denied",
-        message: "Enable GPS to use this feature.",
-        level: 2,
-      });
-      refreshWithCoords(DEFAULT_CENTER[0], DEFAULT_CENTER[1]);
-    }
-  );
+  fetchUserLocationAndData();
 }
 
 async function fetchAQIAndTemperatureForCity(city) {
@@ -1136,6 +1418,9 @@ async function fetchAQIAndTemperatureForCity(city) {
     let temperature = null,
       tempFeelsLike = null,
       weatherDesc = null,
+      humidity = null,
+      windSpeed = null,
+      pressure = null,
       lat = null,
       lon = null;
     if (first.station?.geo && first.station.geo.length === 2) {
@@ -1151,6 +1436,9 @@ async function fetchAQIAndTemperatureForCity(city) {
           temperature = weatherData.main?.temp;
           tempFeelsLike = weatherData.main?.feels_like;
           weatherDesc = weatherData.weather?.[0]?.description;
+          humidity = weatherData.main?.humidity;
+          windSpeed = weatherData.wind?.speed;
+          pressure = weatherData.main?.pressure;
         }
       } catch {}
     }
@@ -1163,6 +1451,10 @@ async function fetchAQIAndTemperatureForCity(city) {
       temperature,
       tempFeelsLike,
       weatherDesc,
+      humidity,
+      windSpeed,
+      pressure,
+      forecast: data3.data.forecast,
       lat,
       lon,
     };
@@ -1170,6 +1462,9 @@ async function fetchAQIAndTemperatureForCity(city) {
   let temperature = null,
     tempFeelsLike = null,
     weatherDesc = null,
+    humidity = null,
+    windSpeed = null,
+    pressure = null,
     lat = null,
     lon = null;
   if (data.data.city?.geo && data.data.city.geo.length === 2) {
@@ -1185,6 +1480,9 @@ async function fetchAQIAndTemperatureForCity(city) {
         temperature = weatherData.main?.temp;
         tempFeelsLike = weatherData.main?.feels_like;
         weatherDesc = weatherData.weather?.[0]?.description;
+        humidity = weatherData.main?.humidity;
+        windSpeed = weatherData.wind?.speed;
+        pressure = weatherData.main?.pressure;
       }
     } catch {}
   }
@@ -1197,12 +1495,19 @@ async function fetchAQIAndTemperatureForCity(city) {
     temperature,
     tempFeelsLike,
     weatherDesc,
+    humidity,
+    windSpeed,
+    pressure,
+    forecast: data.data.forecast,
     lat,
     lon,
   };
 }
 
 async function refreshWithCity(city) {
+  isDetailViewActive = false; // Reset detail view when searching for a new city
+  stationMarkersLayerGroup.clearLayers(); // Clear station markers
+  lastQuery = { type: "city", value: city }; // Set last query
   aqiBadge.textContent = "…";
   statusText.textContent = "Fetching data…";
   adviceText.textContent = "—";
@@ -1211,6 +1516,9 @@ async function refreshWithCity(city) {
   tempStatusText.textContent = "Fetching data…";
   try {
     const {
+      humidity,
+      windSpeed,
+      pressure,
       aqi,
       station,
       time,
@@ -1219,6 +1527,7 @@ async function refreshWithCity(city) {
       temperature,
       tempFeelsLike,
       weatherDesc,
+      forecast,
       lat: fetchedLat,
       lon: fetchedLon,
     } = await fetchAQIAndTemperatureForCity(city);
@@ -1244,65 +1553,29 @@ async function refreshWithCity(city) {
       temperature,
       tempFeelsLike,
       weatherDesc,
+      humidity,
+      windSpeed,
+      pressure,
+      forecast,
       lat,
       lon,
     };
-    updatePollutants(iaqi);
+    updateDashboardUI(window.lastAqiData);
     if (userMarker) map.removeLayer(userMarker);
     userMarker = L.marker([lat, lon])
       .addTo(map)
       .bindPopup(`📍 ${station}`)
       .openPopup();
     map.flyTo([lat, lon], 13, { duration: 2 });
-    const aqiCat = aqiCategory(aqi);
-    aqiBadge.textContent = isNaN(aqi) ? "--" : aqi;
-    aqiBadge.style.color = aqiCat.color;
-    statusText.textContent = aqiCat.label + " – " + station;
-    adviceText.textContent = aqiCat.advice;
-    timeText.textContent = `Updated: ${
-      time || new Date().toLocaleTimeString()
-    }`;
-    if (temperature != null) {
-      const tempCat = tempCategory(temperature);
-      tempBadge.textContent = `${temperature.toFixed(1)}°C`;
-      tempBadge.style.color = tempCat.color;
-      tempStatusText.textContent = `${tempCat.label} (${weatherDesc || "N/A"})`;
-    } else {
-      tempBadge.textContent = "--";
-      tempStatusText.textContent = "N/A";
-      tempBadge.style.color = "#9ca3af";
-    }
-    const series = buildForecastSeries(aqi);
-    updateForecastChartWith(series);
-    maybeAlert({ avg: aqi, cat: aqiCat });
   } catch (e) {
     statusText.textContent = "⚠ Error fetching data: " + e.message;
     tempStatusText.textContent = "⚠ Error fetching data";
+    humidityText.textContent = "--";
+    windText.textContent = "--";
+    pressureText.textContent = "--";
   }
 }
 
-const cityInput = document.getElementById("cityInput");
-refreshBtn?.addEventListener("click", () => {
-  const city = cityInput?.value?.trim();
-  if (city) {
-    refreshWithCity(city);
-  } else {
-    async function initWithIP() {
-      try {
-        const res = await fetch("https://ipapi.co/json/");
-        const data = await res.json();
-        const lat = parseFloat(data.latitude);
-        const lon = parseFloat(data.longitude);
-        if (!isNaN(lat) && !isNaN(lon)) {
-          await refreshWithCoords(lat, lon);
-          return;
-        }
-      } catch (e) {}
-      await refreshWithCoords(DEFAULT_CENTER[0], DEFAULT_CENTER[1]);
-    }
-    initWithIP();
-  }
-});
 locateBtn?.addEventListener("click", () => useMyLocation());
 alertsToggle?.addEventListener("change", () => {
   if (!alertsToggle.checked) {
@@ -1372,6 +1645,48 @@ alertBannerDismiss?.addEventListener("click", () => {
   alertBanner?.classList.add("hidden");
 });
 
+const handleCitySearch = debounce(async (keyword) => {
+  if (keyword.length < 2) {
+    citySuggestions.innerHTML = "";
+    citySuggestions.classList.add("hidden");
+    return;
+  }
+
+  try {
+    const searchUrl = `https://api.waqi.info/search/?token=${TOKEN}&keyword=${encodeURIComponent(
+      keyword
+    )}`;
+    const res = await fetch(searchUrl);
+    const result = await res.json();
+
+    citySuggestions.innerHTML = "";
+    if (result.status === "ok" && result.data.length > 0) {
+      result.data.slice(0, 5).forEach((station) => {
+        const item = document.createElement("div");
+        item.className = "suggestion-item";
+        item.textContent = station.station.name;
+        item.addEventListener("click", () => {
+          cityInput.value = station.station.name;
+          citySuggestions.innerHTML = "";
+          citySuggestions.classList.add("hidden");
+          refreshWithCity(station.station.name);
+        });
+        citySuggestions.appendChild(item);
+      });
+      citySuggestions.classList.remove("hidden");
+    } else {
+      citySuggestions.classList.add("hidden");
+    }
+  } catch (error) {
+    console.error("City search error:", error);
+    citySuggestions.classList.add("hidden");
+  }
+}, 300);
+
+cityInput.addEventListener("input", (e) => {
+  handleCitySearch(e.target.value);
+});
+
 async function initWithIP() {
   try {
     const res = await fetch("https://ipapi.co/json/");
@@ -1379,33 +1694,54 @@ async function initWithIP() {
     const lat = parseFloat(data.latitude);
     const lon = parseFloat(data.longitude);
     if (!isNaN(lat) && !isNaN(lon)) {
-      await refreshWithCoords(lat, lon);
+      await refreshWithCoords(lat, lon, "ip");
       return;
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn("IP-based location failed, falling back to default.", e);
+  }
+  showToast({
+    title: "Location Failed",
+    message: "Showing data for default location (Lucknow).",
+    level: 3,
+  });
   await refreshWithCoords(DEFAULT_CENTER[0], DEFAULT_CENTER[1]);
 }
 
-async function initApp() {
+async function fetchUserLocationAndData() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        await refreshWithCoords(latitude, longitude);
+        await refreshWithCoords(latitude, longitude, "gps");
       },
-      async () => {
-        await initWithIP();
+      async (err) => {
+        showToast({
+          title: "Location not available",
+          message: "Could not get GPS location. Trying to locate by IP.",
+          level: 2,
+        });
+        await initWithIP(); // IP fallback
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   } else {
-    await initWithIP();
+    showToast({
+      title: "Location not supported",
+      message:
+        "Your browser does not support geolocation. Trying to locate by IP.",
+      level: 2,
+    });
+    await initWithIP(); // IP fallback
   }
+}
+
+async function initApp() {
   showPage("main-dashboard");
+  await fetchUserLocationAndData();
 }
 window.addEventListener("load", initApp);
 
-// Zone shading (unchanged)
 let zoneLayer = null;
 function getZoneColor(fixedSeed, i, j) {
   const hash = Math.abs(Math.sin(fixedSeed + i * 1000 + j) * 10000);
@@ -1443,6 +1779,9 @@ function generateZoneShading() {
   }
   zoneLayer = L.layerGroup(layers).addTo(map);
 }
+
+const debouncedGenerateZoneShading = debounce(generateZoneShading, 400);
+
 const zoneLegend = L.control({ position: "bottomright" });
 zoneLegend.onAdd = function (map) {
   const div = L.DomUtil.create("div", "zone-legend");
@@ -1464,16 +1803,45 @@ zoneLegend.onAdd = function (map) {
 document.getElementById("zoneToggle").addEventListener("change", (e) => {
   if (e.target.checked) {
     generateZoneShading();
-    map.on("moveend", generateZoneShading);
+    map.on("moveend", debouncedGenerateZoneShading);
     zoneLegend.addTo(map);
   } else {
     if (zoneLayer) map.removeLayer(zoneLayer);
-    map.off("moveend", generateZoneShading);
+    map.off("moveend", debouncedGenerateZoneShading);
     map.removeControl(zoneLegend);
   }
 });
 
-/* ----------------------- Community Event Listeners ---------------------- */
+const onMapMoveEndForStations = () => {
+  if (isFlyingToStation) {
+    isFlyingToStation = false; // Reset flag and skip this refresh
+    return;
+  }
+  if (isDetailViewActive) {
+    return;
+  }
+  refreshWithBounds(map.getBounds());
+};
+
+const debouncedOnMapMoveEndForStations = debounce(onMapMoveEndForStations, 400);
+
+stationToggle?.addEventListener("change", (e) => {
+  if (e.target.checked) {
+    map.on("moveend", debouncedOnMapMoveEndForStations);
+    isDetailViewActive = false;
+    refreshWithBounds(map.getBounds());
+  } else {
+    map.off("moveend", debouncedOnMapMoveEndForStations);
+    stationMarkersLayerGroup.clearLayers();
+    isDetailViewActive = false;
+  }
+});
+
+document.addEventListener("click", (e) => {
+  if (!cityInput.contains(e.target) && !citySuggestions.contains(e.target)) {
+    citySuggestions.classList.add("hidden");
+  }
+});
 
 regBtn?.addEventListener("click", registerUser);
 loginBtn?.addEventListener("click", loginUser);
@@ -1487,19 +1855,83 @@ refreshFeedBtn?.addEventListener("click", async () => {
   }
 });
 
-// Convenience: Enter key triggers appropriate action
-[regName, regPass].forEach((el) =>
+[regName, regEmail, regPass].forEach((el) =>
   el?.addEventListener("keypress", (e) => {
     if (e.key === "Enter") registerUser();
   })
 );
-[loginName, loginPass].forEach((el) =>
+[loginEmail, loginPass].forEach((el) =>
   el?.addEventListener("keypress", (e) => {
     if (e.key === "Enter") loginUser();
   })
 );
 
-// Add these if they're missing
+const healthData = {
+  cardiovascular: {
+    title: "Cardiovascular Diseases",
+    description:
+      "Fine particulate matter (PM2.5) can enter the bloodstream, leading to inflammation, increased blood pressure, and a higher risk of heart attacks and strokes.",
+    icon: "fa-heartbeat",
+    iconColor: "text-blue-600",
+    bgColor: "bg-blue-100",
+  },
+  respiratory: {
+    title: "Respiratory Issues & Asthma",
+    description:
+      "Ozone (O₃), nitrogen dioxide (NO₂), and sulfur dioxide (SO₂) can irritate the airways, trigger asthma attacks, and worsen conditions like bronchitis and COPD.",
+    icon: "fa-lungs",
+    iconColor: "text-green-600",
+    bgColor: "bg-green-100",
+  },
+  allergies: {
+    title: "Allergies",
+    description:
+      "Air pollutants can carry pollen and other allergens deeper into the lungs, intensifying allergic reactions and leading to more severe symptoms.",
+    icon: "fa-allergies",
+    iconColor: "text-yellow-600",
+    bgColor: "bg-yellow-100",
+  },
+  neurological: {
+    title: "Neurological Effects",
+    description:
+      "Emerging research suggests that long-term exposure to air pollution, particularly PM2.5, may contribute to cognitive decline, dementia, and other neurological disorders.",
+    icon: "fa-brain",
+    iconColor: "text-purple-600",
+    bgColor: "bg-purple-100",
+  },
+  cancer: {
+    title: "Cancer Risk",
+    description:
+      "Certain air pollutants, such as benzene and formaldehyde, are known carcinogens. Long-term exposure increases the risk of developing lung cancer and other forms of cancer.",
+    icon: "fa-disease",
+    iconColor: "text-red-600",
+    bgColor: "bg-red-100",
+  },
+};
+
+healthFilterBtns.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const problem = btn.dataset.healthProblem;
+    const data = healthData[problem];
+
+    if (data) {
+      healthTitle.textContent = data.title;
+      healthDescription.textContent = data.description;
+      healthIconContainer.querySelector(
+        "i"
+      ).className = `fas ${data.icon} fa-2x`;
+      healthIconContainer.className = `p-4 rounded-full mb-4 inline-flex flex-shrink-0 ${data.bgColor} ${data.iconColor}`;
+
+      healthFilterBtns.forEach((b) => {
+        b.classList.remove("bg-blue-600", "text-white");
+        b.classList.add("bg-gray-200", "text-gray-800");
+      });
+      btn.classList.add("bg-blue-600", "text-white");
+      btn.classList.remove("bg-gray-200", "text-gray-800");
+    }
+  });
+});
+
 function getSessionUser() {
   return localStorage.getItem("currentUser");
 }
