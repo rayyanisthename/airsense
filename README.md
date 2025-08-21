@@ -64,7 +64,7 @@ AirSense provides a feature-rich dashboard that goes beyond simple AQI numbers. 
 
 ## 🚀 Getting Started
 
-To run this project locally, follow these steps:
+To run this project locally, follow these steps (The project already includes all these) :
 
 1.  **Clone the repository:**
 
@@ -73,7 +73,7 @@ To run this project locally, follow these steps:
     cd airsense
     ```
 
-2.  **Configure API Keys:**
+2.  **Configure API Keys:** (Already in the project)
     Open `script.js` and replace the placeholder API keys with your own:
 
     ```javascript
@@ -82,7 +82,7 @@ To run this project locally, follow these steps:
     const GROQ_API_KEY = "YOUR_GROQ_API_KEY";
     ```
 
-3.  **Set up Firebase:**
+3.  **Set up Firebase:** (Already in the project)
 
     - Create a new project on the Firebase Console.
     - Enable **Authentication** (with Email/Password provider) and **Firestore Database**.
@@ -115,6 +115,8 @@ To run this project locally, follow these steps:
     # Or if you have Node.js and serve installed
     npm install -g serve
     serve .
+
+    # Or just run html with vs code live server extension
     ```
 
     Then, open your browser and navigate to `http://localhost:8000` (or the port provided by your server).
@@ -122,3 +124,7 @@ To run this project locally, follow these steps:
 ## 🧑‍💻 Author
 
 Made by **Team JF09**.
+-> Rayyan Siddiqui 10C
+-> Paarth Shekhar 10D
+-> Yashita Yadav 10F
+-> Mitanshi Rai 10F
