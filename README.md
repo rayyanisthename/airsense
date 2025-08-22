@@ -126,11 +126,11 @@ To run this project locally, follow these steps (The project already includes al
 
 Made by **Team JF09**.
 
--> Rayyan Siddiqui 10C
+-> Rayyan Siddiqui 10C - Programmer
 
--> Paarth Shekhar 10D
+-> Paarth Shekhar 10D - Programmer
 
--> Yashita Yadav 10F
+-> Yashita Yadav 10F - Presenter
 
--> Mitanshi Rai 10F
+-> Mitanshi Rai 10F - Presenter
 
